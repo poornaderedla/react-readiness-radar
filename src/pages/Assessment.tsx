@@ -87,17 +87,21 @@ const Assessment = () => {
               <h3 className="font-semibold mb-3">{currentQuestion}. What best describes your current programming experience?</h3>
               <div className="space-y-2">
                 {options.map((option, index) => (
-                  <Button
+                  <button
                     key={index}
-                    variant={selectedAnswer === index ? "default" : "outline"}
-                    className="w-full justify-start text-left h-auto p-4 relative"
+                    type="button"
+                    className={`w-full justify-start text-left h-auto p-4 relative inline-flex items-center rounded-md text-sm font-medium transition-colors border ${
+                      selectedAnswer === index 
+                        ? 'bg-primary text-primary-foreground border-primary' 
+                        : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'
+                    }`}
                     onClick={() => handleAnswerSelect(index)}
                   >
                     {selectedAnswer === index && (
-                      <Check className="h-4 w-4 mr-2 text-primary-foreground" />
+                      <Check className="h-4 w-4 mr-2" />
                     )}
                     {option}
-                  </Button>
+                  </button>
                 ))}
               </div>
             </div>
