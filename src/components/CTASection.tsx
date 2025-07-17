@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Clock, Users, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const CTASection = () => {
   return (
@@ -43,9 +44,11 @@ const CTASection = () => {
 
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" variant="gradient" className="text-lg px-8 py-6 group">
-            Start Your Assessment
-            <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          <Button size="lg" variant="gradient" className="text-lg px-8 py-6 group" asChild>
+            <Link to="/assessment">
+              Start Your Assessment
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </Button>
           <Button size="lg" variant="outline" className="text-lg px-8 py-6">
             View Sample Report
