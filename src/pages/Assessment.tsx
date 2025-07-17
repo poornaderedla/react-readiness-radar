@@ -1,11 +1,49 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Clock, Users, Award } from 'lucide-react';
+import { ArrowLeft, Clock, Users, Award, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const Assessment = () => {
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [currentQuestion, setCurrentQuestion] = useState(1);
+  const { toast } = useToast();
+
+  const handleAnswerSelect = (answerIndex: number) => {
+    setSelectedAnswer(answerIndex);
+  };
+
+  const handleNext = () => {
+    if (selectedAnswer === null) {
+      toast({
+        title: "Please select an answer",
+        description: "You need to choose an option before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // For demo purposes, just show completion message
+    toast({
+      title: "Answer recorded!",
+      description: "Moving to next question...",
+    });
+    
+    setSelectedAnswer(null);
+    setCurrentQuestion(currentQuestion + 1);
+  };
+
+  const options = [
+    'Complete beginner - no programming experience',
+    'Some HTML/CSS knowledge',
+    'Basic JavaScript experience',
+    'Experienced with other programming languages',
+    'Professional developer looking to learn React'
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -25,9 +63,9 @@ const Assessment = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium">Assessment Progress</span>
-            <span className="text-sm text-muted-foreground">1 of 6 sections</span>
+            <span className="text-sm text-muted-foreground">{currentQuestion} of 6 sections</span>
           </div>
-          <Progress value={16.67} className="h-2" />
+          <Progress value={(currentQuestion / 6) * 100} className="h-2" />
         </div>
 
         {/* Current Section */}
@@ -46,20 +84,18 @@ const Assessment = () => {
           <CardContent className="space-y-6">
             {/* Sample Question */}
             <div>
-              <h3 className="font-semibold mb-3">1. What best describes your current programming experience?</h3>
+              <h3 className="font-semibold mb-3">{currentQuestion}. What best describes your current programming experience?</h3>
               <div className="space-y-2">
-                {[
-                  'Complete beginner - no programming experience',
-                  'Some HTML/CSS knowledge',
-                  'Basic JavaScript experience',
-                  'Experienced with other programming languages',
-                  'Professional developer looking to learn React'
-                ].map((option, index) => (
+                {options.map((option, index) => (
                   <Button
                     key={index}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto p-4"
+                    variant={selectedAnswer === index ? "default" : "outline"}
+                    className="w-full justify-start text-left h-auto p-4 relative"
+                    onClick={() => handleAnswerSelect(index)}
                   >
+                    {selectedAnswer === index && (
+                      <Check className="h-4 w-4 mr-2 text-primary-foreground" />
+                    )}
                     {option}
                   </Button>
                 ))}
@@ -68,11 +104,15 @@ const Assessment = () => {
 
             {/* Navigation */}
             <div className="flex justify-between pt-6 border-t">
-              <Button variant="outline" disabled>
+              <Button 
+                variant="outline" 
+                disabled={currentQuestion === 1}
+                onClick={() => setCurrentQuestion(Math.max(1, currentQuestion - 1))}
+              >
                 Previous
               </Button>
-              <Button>
-                Next Question
+              <Button onClick={handleNext}>
+                {currentQuestion === 6 ? 'Complete Assessment' : 'Next Question'}
               </Button>
             </div>
           </CardContent>
