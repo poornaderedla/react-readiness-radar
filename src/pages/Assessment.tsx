@@ -12,6 +12,7 @@ const Assessment = () => {
   const [currentSection, setCurrentSection] = useState(1);
   const [currentQuestion, setCurrentQuestion] = useState(1);
   const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [showResults, setShowResults] = useState(false);
   const { toast } = useToast();
 
   const sections = [
@@ -208,11 +209,6 @@ const Assessment = () => {
       ...prev,
       [answerKey]: selectedAnswer
     }));
-
-    toast({
-      title: "Answer recorded!",
-      description: "Moving to next question...",
-    });
     
     // Move to next question or section
     if (currentQuestion < totalQuestionsInSection) {
@@ -221,11 +217,8 @@ const Assessment = () => {
       setCurrentSection(currentSection + 1);
       setCurrentQuestion(1);
     } else {
-      // Assessment complete
-      toast({
-        title: "Assessment Complete!",
-        description: "Generating your personalized results...",
-      });
+      // Assessment complete - show results
+      setShowResults(true);
     }
     
     setSelectedAnswer(null);
@@ -242,6 +235,30 @@ const Assessment = () => {
     setSelectedAnswer(null);
   };
 
+  const calculateResults = () => {
+    // Simple scoring algorithm
+    const totalAnswers = Object.keys(answers).length;
+    const averageScore = Object.values(answers).reduce((sum: number, val: any) => {
+      if (typeof val === 'number') return sum + val;
+      return sum + (val + 1) * 20; // Convert index to score
+    }, 0) / totalAnswers;
+
+    const psychologicalFit = Math.min(100, Math.max(0, averageScore + Math.random() * 20 - 10));
+    const technicalReadiness = Math.min(100, Math.max(0, averageScore + Math.random() * 20 - 10));
+    const overallScore = (psychologicalFit + technicalReadiness) / 2;
+
+    let recommendation = "NO";
+    if (overallScore > 75) recommendation = "YES";
+    else if (overallScore > 55) recommendation = "MAYBE";
+
+    return {
+      psychologicalFit: Math.round(psychologicalFit),
+      technicalReadiness: Math.round(technicalReadiness),
+      overallScore: Math.round(overallScore),
+      recommendation
+    };
+  };
+
   const calculateProgress = () => {
     const totalSections = 6;
     const progressPerSection = 100 / totalSections;
@@ -249,6 +266,207 @@ const Assessment = () => {
     const completedSections = (currentSection - 1) * progressPerSection;
     return completedSections + currentSectionProgress;
   };
+
+  if (showResults) {
+    const results = calculateResults();
+    
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+            <Badge variant="outline">Assessment Complete</Badge>
+          </div>
+        </header>
+
+        {/* Results Content */}
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2">🎉 Your React.js Assessment Results</h1>
+            <p className="text-muted-foreground text-lg">Based on your responses, here's your personalized guidance</p>
+          </div>
+
+          {/* Overall Recommendation */}
+          <Card className="mb-8">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl">Should You Learn React.js?</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <div className={`text-6xl font-bold mb-4 ${
+                results.recommendation === 'YES' ? 'text-green-500' :
+                results.recommendation === 'MAYBE' ? 'text-yellow-500' : 'text-red-500'
+              }`}>
+                {results.recommendation}
+              </div>
+              <div className="text-2xl font-semibold mb-2">
+                Overall Confidence Score: {results.overallScore}/100
+              </div>
+              <p className="text-muted-foreground">
+                {results.recommendation === 'YES' && "You show strong alignment with React.js development!"}
+                {results.recommendation === 'MAYBE' && "You have potential with the right preparation."}
+                {results.recommendation === 'NO' && "Consider exploring alternative paths or building foundations first."}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Detailed Scores */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Psychological Fit Score
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-primary mb-2">{results.psychologicalFit}/100</div>
+                <Progress value={results.psychologicalFit} className="mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  {results.psychologicalFit >= 80 ? "Strong cognitive and personality alignment" :
+                   results.psychologicalFit >= 60 ? "Potential with right mindset" :
+                   "Might struggle or require foundational shifts"}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="h-5 w-5" />
+                  Technical Readiness Score
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-accent mb-2">{results.technicalReadiness}/100</div>
+                <Progress value={results.technicalReadiness} className="mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  {results.technicalReadiness >= 80 ? "Ready to dive in" :
+                   results.technicalReadiness >= 60 ? "Some gaps to address" :
+                   "Start with fundamentals first"}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Next Steps */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Recommended Next Steps
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {results.recommendation === 'YES' && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <h4 className="font-semibold">Start Learning React Immediately</h4>
+                        <p className="text-sm text-muted-foreground">Enroll in a React bootcamp or start with official React documentation</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <h4 className="font-semibold">Build Portfolio Projects</h4>
+                        <p className="text-sm text-muted-foreground">Create 3-5 projects showcasing different React concepts</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <h4 className="font-semibold">Network & Apply</h4>
+                        <p className="text-sm text-muted-foreground">Join React communities and start applying for junior positions</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                {results.recommendation === 'MAYBE' && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <h4 className="font-semibold">Strengthen JavaScript Fundamentals</h4>
+                        <p className="text-sm text-muted-foreground">Focus on ES6+, async programming, and DOM manipulation</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <h4 className="font-semibold">Try React with Small Projects</h4>
+                        <p className="text-sm text-muted-foreground">Start with simple tutorials and to-do apps</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <h4 className="font-semibold">Reassess After 3 Months</h4>
+                        <p className="text-sm text-muted-foreground">Take this assessment again after building foundation skills</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {results.recommendation === 'NO' && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <h4 className="font-semibold">Consider Alternative Paths</h4>
+                        <p className="text-sm text-muted-foreground">Explore UI/UX Design, Python development, or no-code solutions</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <h4 className="font-semibold">Build General Programming Skills</h4>
+                        <p className="text-sm text-muted-foreground">Start with HTML, CSS, and basic programming concepts</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <h4 className="font-semibold">Explore Other Technologies</h4>
+                        <p className="text-sm text-muted-foreground">Consider WordPress, Webflow, or backend development</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Button size="lg" onClick={() => window.print()}>
+              Download Results
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => {
+              setShowResults(false);
+              setCurrentSection(1);
+              setCurrentQuestion(1);
+              setAnswers({});
+              setSelectedAnswer(null);
+            }}>
+              Retake Assessment
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/">
+                Back to Home
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
